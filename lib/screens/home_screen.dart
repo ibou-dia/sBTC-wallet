@@ -5,10 +5,19 @@ import '../utils/formatters.dart';
 import '../theme/app_theme.dart';
 import '../widgets/address_card.dart';
 import '../widgets/transaction_item.dart';
+import '../widgets/app_drawer.dart';
+import '../utils/constants.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  
   @override
   Widget build(BuildContext context) {
     final walletService = Provider.of<WalletService>(context);
@@ -23,30 +32,37 @@ class HomeScreen extends StatelessWidget {
         ),
       );
     }
-
+    
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // App Bar Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'sBTC Wallet',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.settings_outlined),
-                    onPressed: () {
-                      // TODO: Implement settings
-                    },
-                  ),
-                ],
-              ),
+      key: _scaffoldKey,
+      drawer: AppDrawer(currentRoute: Constants.routeHome),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        title: const Text(
+          'sBTC Wallet',
+          style: TextStyle(color: AppTheme.textPrimary),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: AppTheme.textPrimary),
+          onPressed: () {
+            _scaffoldKey.currentState!.openDrawer();
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined, color: AppTheme.textPrimary),
+            onPressed: () {
+              // TODO: Implement notifications
+            },
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
               
               const SizedBox(height: 24),
               
@@ -191,14 +207,13 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-            ],
-          ),
+          ],
         ),
       ),
     );
   }
   
-  Expanded _buildActionButton(
+  Widget _buildActionButton(
     BuildContext context, {
     required IconData icon,
     required String label,
@@ -224,9 +239,9 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 label,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),

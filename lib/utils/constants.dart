@@ -10,6 +10,14 @@ class Constants {
   static const String routeTransactions = '/transactions';
   static const String routeOnboarding = '/onboarding';
   
+  // Drawer Routes
+  static const String routeAccount = '/account';
+  static const String routeTrack = '/track';
+  static const String routeCurrency = '/currency';
+  static const String routeSettings = '/settings';
+  static const String routeAbout = '/about';
+  static const String routeSplash = '/splash';
+  
   // Storage Keys
   static const String keyWalletAddress = 'wallet_address';
   static const String keyWalletBalance = 'wallet_balance';
