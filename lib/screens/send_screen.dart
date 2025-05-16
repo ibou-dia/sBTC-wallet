@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/wallet_service.dart';
 import '../services/currency_service.dart';
@@ -45,19 +46,31 @@ class _SendScreenState extends State<SendScreen> {
     final currencyService = Provider.of<CurrencyService>(context, listen: false);
     
     if (_btcAmountController.text.isEmpty) {
+      // Si le champ est vide, vider aussi le champ de devise fiat
       _fiatAmountController.text = '';
       return;
     }
     
     try {
-      final btcAmount = double.parse(_btcAmountController.text);
+      // Vérifier si la valeur est un nombre valide
+      final btcText = _btcAmountController.text;
+      if (btcText == '0' || btcText == '0.0' || btcText == '0.00') {
+        _fiatAmountController.text = '0.00';
+        return;
+      }
+      
+      final btcAmount = double.parse(btcText);
       final fiatAmount = currencyService.btcToFiat(btcAmount);
       
-      _inputInFiat = true; // Prevent callback loop
+      // Désactiver temporairement les écouteurs pour éviter les boucles de mise à jour
+      _inputInFiat = true;
       _fiatAmountController.text = fiatAmount.toStringAsFixed(2);
-      _inputInFiat = false;
+      // Délai pour remettre le flag à false afin d'éviter les problèmes de timing
+      Future.delayed(Duration.zero, () {
+        _inputInFiat = false;
+      });
     } catch (e) {
-      // Invalid input, ignore
+      // Si la valeur n'est pas un nombre valide, ne pas mettre à jour l'autre champ
     }
   }
 
@@ -68,18 +81,31 @@ class _SendScreenState extends State<SendScreen> {
     final currencyService = Provider.of<CurrencyService>(context, listen: false);
     
     if (_fiatAmountController.text.isEmpty) {
+      // Si le champ est vide, vider aussi le champ BTC
       _btcAmountController.text = '';
       return;
     }
     
     try {
-      final fiatAmount = double.parse(_fiatAmountController.text);
+      // Vérifier si la valeur est un nombre valide
+      final fiatText = _fiatAmountController.text;
+      if (fiatText == '0' || fiatText == '0.0' || fiatText == '0.00') {
+        _btcAmountController.text = '0.00000000';
+        return;
+      }
+      
+      final fiatAmount = double.parse(fiatText);
       final btcAmount = currencyService.fiatToBtc(fiatAmount);
       
-      _inputInFiat = false; // Prevent callback loop
+      // Désactiver temporairement les écouteurs pour éviter les boucles de mise à jour
+      _inputInFiat = false;
       _btcAmountController.text = btcAmount.toStringAsFixed(8);
+      // Délai pour remettre le flag à true afin d'éviter les problèmes de timing
+      Future.delayed(Duration.zero, () {
+        _inputInFiat = true;
+      });
     } catch (e) {
-      // Invalid input, ignore
+      // Si la valeur n'est pas un nombre valide, ne pas mettre à jour l'autre champ
     }
   }
 
@@ -359,6 +385,21 @@ class _SendScreenState extends State<SendScreen> {
         suffixText: 'sBTC',
       ),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      // Limiter la saisie à 8 décimales
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,8}')),
+      ],
+      // Ne pas mettre à jour pendant la frappe mais seulement lors de la perte de focus
+      onChanged: (value) {
+        // Laisser le champ tel quel pendant la saisie
+        // L'écouteur _onBtcAmountChanged s'occupe de la mise à jour
+      },
+      onTap: () {
+        // Si l'utilisateur touche le champ, s'assurer qu'il est en mode BTC
+        setState(() {
+          _inputInFiat = false;
+        });
+      },
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
           return 'Please enter an amount';
@@ -388,10 +429,36 @@ class _SendScreenState extends State<SendScreen> {
         suffixText: currencyService.selectedCurrency,
       ),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      onChanged: (value) {
+      // Limiter la saisie à 2 décimales pour la devise fiat
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+      ],
+      onTap: () {
+        // Si l'utilisateur touche le champ, s'assurer qu'il est en mode fiat
         setState(() {
           _inputInFiat = true;
         });
+      },
+      // Validation pour les montants fiat
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return 'Please enter an amount';
+        }
+        try {
+          final amount = double.parse(value);
+          if (amount <= 0) {
+            return 'Amount must be greater than 0';
+          }
+          
+          // Vérifier si le montant équivalent en BTC est supérieur au solde
+          final btcAmount = currencyService.fiatToBtc(amount);
+          if (btcAmount > Provider.of<WalletService>(context, listen: false).wallet!.balance) {
+            return 'Insufficient balance';
+          }
+        } catch (e) {
+          return 'Please enter a valid amount';
+        }
+        return null;
       },
     );
   }

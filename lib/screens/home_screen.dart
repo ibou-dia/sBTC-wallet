@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/wallet_service.dart';
+import '../services/currency_service.dart';
 import '../utils/formatters.dart';
 import '../theme/app_theme.dart';
 import '../widgets/address_card.dart';
@@ -102,6 +103,19 @@ class _HomeScreenState extends State<HomeScreen> {
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
+                      ),
+                      const SizedBox(height: 4),
+                      Consumer<CurrencyService>(
+                        builder: (context, currencyService, _) {
+                          // Convertir le solde BTC en devise fiat
+                          final fiatBalance = currencyService.btcToFiat(wallet.balance);
+                          return Text(
+                            currencyService.formatFiatAmount(fiatBalance),
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                          );
+                        },
                       ),
                       const SizedBox(height: 24),
                       AddressCard(
