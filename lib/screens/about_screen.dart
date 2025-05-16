@@ -117,14 +117,7 @@ class AboutScreen extends StatelessWidget {
                   ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Built with Flutter',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
-              textAlign: TextAlign.center,
-            ),
+            
           ],
         ),
       ),
