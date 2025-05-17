@@ -67,7 +67,8 @@ class AuthScreen extends StatelessWidget {
                             : () async {
                                 final success = await walletService.connectWallet();
                                 if (success && context.mounted) {
-                                  Navigator.pushReplacementNamed(context, '/home');
+                                  // Rediriger vers l'onboarding au lieu de l'écran d'accueil
+                                  Navigator.pushReplacementNamed(context, '/onboarding');
                                 }
                               },
                         child: walletService.isLoading
