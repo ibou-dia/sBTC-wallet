@@ -17,7 +17,7 @@ sBTC Wallet est une application mobile développée avec Flutter qui permet aux 
 
 ## Captures d'écran
 
-![Captures d'écran](assets\images\sbtc-wallet.jpg)
+![Captures d'écran](assets/images/sbtc-wallet.jpg)
 
 
 ## Technologies utilisées
